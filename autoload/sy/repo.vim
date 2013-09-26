@@ -64,7 +64,14 @@ endfunction
 " Function: #get_diff_git {{{1
 function! sy#repo#get_diff_git(path) abort
   let diffoptions = has_key(s:diffoptions, 'git') ? s:diffoptions.git : ''
-  let diff = system('cd '. sy#util#escape(fnamemodify(a:path, ':h')) .' && git diff --no-color --no-ext-diff -U0 '. diffoptions .' -- '. sy#util#escape(a:path))
+  let cmd = 'cd '. sy#util#escape(fnamemodify(a:path, ':h')) .' && git diff --no-color --no-ext-diff -U0 '. diffoptions .' -- '. sy#util#escape(a:path)
+
+  if has('win32') && get(g:, 'signify_enable_vimmisc')
+    let ret = xolox#misc#os#exec({'command': cmd, 'async': 0})
+    return ret.exit_code ? '' : join(ret.stdout, "\n")
+  endif
+
+  let diff = system(cmd)
   return v:shell_error ? '' : diff
 endfunction
 
@@ -172,7 +179,11 @@ function! sy#repo#process_diff(path, diff) abort
   for line in filter(split(a:diff, '\n'), 'v:val =~ "^@@ "')
     let tokens = matchlist(line, '^@@ -\v(\d+),?(\d*) \+(\d+),?(\d*)')
 
-    let [ old_line, old_count, new_line, new_count ] = [ str2nr(tokens[1]), empty(tokens[2]) ? 1 : str2nr(tokens[2]), str2nr(tokens[3]), empty(tokens[4]) ? 1 : str2nr(tokens[4]) ]
+    let old_line = str2nr(tokens[1])
+    let new_line = str2nr(tokens[3])
+
+    let old_count = empty(tokens[2]) ? 1 : str2nr(tokens[2])
+    let new_count = empty(tokens[4]) ? 1 : str2nr(tokens[4])
 
     let signs = []
 
