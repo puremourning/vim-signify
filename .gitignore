@@ -5,6 +5,7 @@
 !LICENSE
 !README.md
 !autoload/sy.vim
+!autoload/sy/action.vim
 !autoload/sy/debug.vim
 !autoload/sy/highlight.vim
 !autoload/sy/jump.vim

@@ -96,6 +96,10 @@ function! sy#start(path) abort
   sign unplace 99999
 
   let b:sy.id_top = (g:id_top - 1)
+
+  if exists('g:signify_action_on_modified_lines')
+    call sy#action#run(g:signify_action_on_modified_lines)
+  endif
 endfunction
 
 " Function: #stop {{{1
