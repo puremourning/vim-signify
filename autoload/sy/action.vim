@@ -4,7 +4,7 @@ scriptencoding utf-8
 
 " Function: #run {{{1
 function! sy#action#run(fname) abort
-  if !exists('b:sy') || empty('b.sy.hunks')
+  if !exists('b:sy')
     echomsg 'signify: I cannot detect any changes!'
     return
   endif
