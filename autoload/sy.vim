@@ -97,9 +97,11 @@ function! sy#start(path) abort
 
   let b:sy.id_top = (g:id_top - 1)
 
-  if exists('g:signify_action_on_modified_lines')
+  if exists('g:signify_action_on_modified_lines') && exists('b:sy_initialized')
     call sy#action#run(g:signify_action_on_modified_lines)
   endif
+
+  let b:sy_initialized = 1
 endfunction
 
 " Function: #stop {{{1
