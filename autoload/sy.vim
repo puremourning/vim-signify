@@ -26,8 +26,8 @@ function! sy#start(path) abort
     return
   endif
 
-  if &diff
-        \ || !filereadable(a:path)
+  if
+        \    !filereadable(a:path)
         \ || (exists('g:signify_skip_filetype') && (has_key(g:signify_skip_filetype, &ft)
         \                                       || (has_key(g:signify_skip_filetype, 'help')
         \                                       && &bt == 'help')))

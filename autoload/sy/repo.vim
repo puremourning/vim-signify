@@ -79,15 +79,16 @@ function! sy#repo#get_diff_git() abort
 endfunction
 
 " Function: #get_orig_git {{{1
-function! sy#repo#get_orig_git(bang) abort
+function! sy#repo#get_orig_git(bang)
   if exists('s:orig_buffer')
     execute 'silent bwipeout!' s:orig_buffer
-    unlet s:orig_buffer
     diffoff
+    let [ &fdm, &fdl, &fdc, &wrap ] = [ s:pre.fdm, s:pre.fdl, s:pre.fdc, s:pre.wrap ]
+    unlet s:orig_buffer s:pre
+    silent! normal! zO
     return
   endif
 
-  let filetype = &filetype
   let root     = split(system(s:orig_cmds.git))[0]
   let prunelen = len(root) + 1
   let vcsfile  = expand('%:p')[prunelen :]
@@ -95,7 +96,16 @@ function! sy#repo#get_orig_git(bang) abort
 
   execute (haslocaldir() ? 'lcd' : 'cd') root
 
+  " Preserve some options changed by :diffthis / :diffoff.
+  let s:pre = {
+        \ 'fdm':  &foldmethod,
+        \ 'fdl':  &foldlevel,
+        \ 'fdc':  &foldcolumn,
+        \ 'wrap': &wrap,
+        \ }
+
   if a:bang
+    let filetype = &filetype
     diffthis
     noautocmd leftabove vnew
     let s:orig_buffer = bufnr('%')
@@ -105,12 +115,10 @@ function! sy#repo#get_orig_git(bang) abort
     let &filetype = filetype
     diffthis
     wincmd p
-    normal! zR
+    silent! normal! zO
     wincmd p
     nnoremap <buffer> q :Orig<cr>
   else
-    let fdm = &foldmethod
-    let fdl = &foldlevel
     diffthis
     noautocmd enew
     let s:orig_buffer = bufnr('%')
@@ -119,9 +127,8 @@ function! sy#repo#get_orig_git(bang) abort
     silent 0delete_
     diffthis
     buffer #
-    let &foldlevel  = fdl
-    let &foldmethod = fdm
-    silent normal! zR
+    let [ &fdm, &fdl, &fdc, &wrap ] = [ s:pre.fdm, s:pre.fdl, s:pre.fdc, s:pre.wrap ]
+    silent! normal! zO
   endif
 
   execute (haslocaldir() ? 'lcd' : 'cd') cwd
