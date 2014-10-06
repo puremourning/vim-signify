@@ -41,6 +41,10 @@ if empty(s:vcs_list)
   let s:vcs_list = keys(filter(s:vcs_dict, 'executable(v:val)'))
 endif
 
+let s:orig_cmds = {
+      \ 'git': 'git rev-parse --show-toplevel',
+      \ }
+
 " Function: #detect {{{1
 function! sy#repo#detect() abort
   let dir = fnamemodify(b:sy.path, ':h')
@@ -73,6 +77,50 @@ function! sy#repo#get_diff_git() abort
 
   return v:shell_error ? [0, ''] : [1, diff]
 endfunction
+
+" Function: #get_orig_git {{{1
+function! sy#repo#get_orig_git(bang) abort
+  if exists('s:orig_buffer')
+    execute 'bwipeout!' s:orig_buffer
+    unlet s:orig_buffer
+    diffoff
+    return
+  endif
+
+  let filetype = &filetype
+  let root     = split(system(s:orig_cmds.git))[0]
+  let prunelen = len(root) + 1
+  let vcsfile  = expand('%:p')[prunelen :]
+
+  if a:bang
+    diffthis
+    noautocmd leftabove vnew
+    let s:orig_buffer = bufnr('%')
+    setlocal buftype=nofile nobuflisted
+    execute 'read !git show HEAD:'. vcsfile
+    silent 0delete_
+    let &filetype = filetype
+    diffthis
+    wincmd p
+    normal! zR
+    wincmd p
+    nnoremap <buffer> q :Orig<cr>
+  else
+    let fdm = &foldmethod
+    diffthis
+    noautocmd enew
+    let s:orig_buffer = bufnr('%')
+    setlocal buftype=nofile nobuflisted
+    execute 'read !git show HEAD:'. vcsfile
+    silent 0delete_
+    diffthis
+    buffer #
+    let &foldmethod = fdm
+    silent normal! zO
+  endif
+endfunction
+
+command! -bang OrigToggle call sy#repo#get_orig_git(<bang>0)
 
 " Function: #get_stat_git {{{1
 function! sy#repo#get_stat_git() abort
