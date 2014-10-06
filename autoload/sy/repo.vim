@@ -110,6 +110,7 @@ function! sy#repo#get_orig_git(bang) abort
     nnoremap <buffer> q :Orig<cr>
   else
     let fdm = &foldmethod
+    let fdl = &foldlevel
     diffthis
     noautocmd enew
     let s:orig_buffer = bufnr('%')
@@ -118,6 +119,7 @@ function! sy#repo#get_orig_git(bang) abort
     silent 0delete_
     diffthis
     buffer #
+    let &foldlevel  = fdl
     let &foldmethod = fdm
     silent normal! zR
   endif
