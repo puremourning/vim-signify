@@ -81,7 +81,7 @@ endfunction
 " Function: #get_orig_git {{{1
 function! sy#repo#get_orig_git(bang) abort
   if exists('s:orig_buffer')
-    execute 'bwipeout!' s:orig_buffer
+    execute 'silent bwipeout!' s:orig_buffer
     unlet s:orig_buffer
     diffoff
     return
@@ -91,6 +91,9 @@ function! sy#repo#get_orig_git(bang) abort
   let root     = split(system(s:orig_cmds.git))[0]
   let prunelen = len(root) + 1
   let vcsfile  = expand('%:p')[prunelen :]
+  let cwd      = getcwd()
+
+  execute (haslocaldir() ? 'lcd' : 'cd') root
 
   if a:bang
     diffthis
@@ -116,8 +119,10 @@ function! sy#repo#get_orig_git(bang) abort
     diffthis
     buffer #
     let &foldmethod = fdm
-    silent normal! zO
+    silent normal! zR
   endif
+
+  execute (haslocaldir() ? 'lcd' : 'cd') cwd
 endfunction
 
 command! -bang OrigToggle call sy#repo#get_orig_git(<bang>0)
