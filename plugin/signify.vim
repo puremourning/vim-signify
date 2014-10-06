@@ -48,9 +48,10 @@ augroup signify
 augroup END
 
 " Init: commands {{{1
-com! -nargs=0 -bar  SignifyToggle          call sy#toggle()
-com! -nargs=0 -bar  SignifyToggleHighlight call sy#highlight#line_toggle()
-com! -nargs=0 -bar  SyDebug                call sy#debug#list_active_buffers()
+command! -nargs=0 -bar       SignifyToggle          call sy#toggle()
+command! -nargs=0 -bar       SignifyToggleHighlight call sy#highlight#line_toggle()
+command! -nargs=0 -bar       SyDebug                call sy#debug#list_active_buffers()
+command! -nargs=0 -bar -bang SyOrig                 call sy#repo#orig_diff(<bang>0)
 
 " Init: mappings {{{1
 nnoremap <silent> <expr> <plug>(signify-next-hunk) &diff ? ']c' : ":\<c-u>call sy#jump#next_hunk(v:count1)\<cr>"

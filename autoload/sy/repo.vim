@@ -70,26 +70,28 @@ function! sy#repo#detect() abort
   return [ '', 'unknown' ]
 endfunction
 
-" Function: #get_diff_git {{{1
-function! sy#repo#get_diff_git() abort
-  let diffoptions = has_key(g:signify_diffoptions, 'git') ? g:signify_diffoptions.git : ''
-  let diff = sy#util#run_in_dir(fnamemodify(b:sy.path, ':h'), 'git diff --no-color --no-ext-diff -U0 '. diffoptions .' -- '. sy#util#escape(fnamemodify(b:sy.path, ':t')))
-
-  return v:shell_error ? [0, ''] : [1, diff]
-endfunction
-
-" Function: #get_orig_git {{{1
-function! sy#repo#get_orig_git(bang)
+" Function: #diff_orig {{{1
+function! sy#repo#orig_diff(bang)
+  " Toggle off.
   if exists('s:orig_buffer')
     execute 'silent bwipeout!' s:orig_buffer
     diffoff
     let [ &fdm, &fdl, &fdc, &wrap ] = [ s:pre.fdm, s:pre.fdl, s:pre.fdc, s:pre.wrap ]
+    call winrestview(s:pre.view)
     unlet s:orig_buffer s:pre
     silent! normal! zO
     return
+  elseif !exists('b:sy') || max(b:sy.stats) <= 0
+    echomsg 'signify: I cannot detect any changes!'
+    return
+  elseif !has_key(s:orig_cmds, b:sy.type)
+    echohl ErrorMsg
+    echomsg ":SyOrig doesn't yet support ". b:sy.type .'. Please open a Github issue.'
+    echohl NONE
+    return
   endif
 
-  let root     = split(system(s:orig_cmds.git))[0]
+  let root     = split(system(s:orig_cmds[b:sy.type]))[0]
   let prunelen = len(root) + 1
   let vcsfile  = expand('%:p')[prunelen :]
   let cwd      = getcwd()
@@ -102,6 +104,7 @@ function! sy#repo#get_orig_git(bang)
         \ 'fdl':  &foldlevel,
         \ 'fdc':  &foldcolumn,
         \ 'wrap': &wrap,
+        \ 'view': winsaveview(),
         \ }
 
   if a:bang
@@ -110,31 +113,39 @@ function! sy#repo#get_orig_git(bang)
     noautocmd leftabove vnew
     let s:orig_buffer = bufnr('%')
     setlocal buftype=nofile nobuflisted
-    execute 'read !git show HEAD:'. vcsfile
+    execute 'silent read !git show HEAD:'. vcsfile
     silent 0delete_
     let &filetype = filetype
     diffthis
     wincmd p
     silent! normal! zO
     wincmd p
-    nnoremap <buffer> q :Orig<cr>
+    nnoremap <buffer> q :SyOrig<cr>
+    redraw | echo "Use 'q' or :SyOrig to delete this buffer and end orig-diff mode."
   else
     diffthis
     noautocmd enew
     let s:orig_buffer = bufnr('%')
     setlocal buftype=nofile nobuflisted
-    execute 'read !git show HEAD:'. vcsfile
+    execute 'silent read !git show HEAD:'. vcsfile
     silent 0delete_
     diffthis
-    buffer #
+    silent buffer #
     let [ &fdm, &fdl, &fdc, &wrap ] = [ s:pre.fdm, s:pre.fdl, s:pre.fdc, s:pre.wrap ]
     silent! normal! zO
+    redraw | echo 'Use :SyOrig to end orig-diff mode.'
   endif
 
   execute (haslocaldir() ? 'lcd' : 'cd') cwd
 endfunction
 
-command! -bang Orig call sy#repo#get_orig_git(<bang>0)
+" Function: #get_diff_git {{{1
+function! sy#repo#get_diff_git() abort
+  let diffoptions = has_key(g:signify_diffoptions, 'git') ? g:signify_diffoptions.git : ''
+  let diff = sy#util#run_in_dir(fnamemodify(b:sy.path, ':h'), 'git diff --no-color --no-ext-diff -U0 '. diffoptions .' -- '. sy#util#escape(fnamemodify(b:sy.path, ':t')))
+
+  return v:shell_error ? [0, ''] : [1, diff]
+endfunction
 
 " Function: #get_stat_git {{{1
 function! sy#repo#get_stat_git() abort
