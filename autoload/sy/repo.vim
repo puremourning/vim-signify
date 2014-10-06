@@ -125,7 +125,7 @@ function! sy#repo#get_orig_git(bang) abort
   execute (haslocaldir() ? 'lcd' : 'cd') cwd
 endfunction
 
-command! -bang OrigToggle call sy#repo#get_orig_git(<bang>0)
+command! -bang Orig call sy#repo#get_orig_git(<bang>0)
 
 " Function: #get_stat_git {{{1
 function! sy#repo#get_stat_git() abort
