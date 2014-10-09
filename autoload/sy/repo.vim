@@ -42,8 +42,14 @@ if empty(s:vcs_list)
 endif
 
 let s:orig_cmds = {
-      \ 'git': 'git rev-parse --show-toplevel',
-      \ }
+      \ 'git': {
+      \   'rootcmd': 'git rev-parse --show-toplevel',
+      \   'origcmd': 'git show HEAD:'
+      \  },
+      \ 'hg': {
+      \   'rootcmd': 'hg root',
+      \   'origcmd': 'hg cat -- '
+      \ }}
 
 " Function: #detect {{{1
 function! sy#repo#detect() abort
@@ -86,12 +92,13 @@ function! sy#repo#orig_diff(bang)
     return
   elseif !has_key(s:orig_cmds, b:sy.type)
     echohl ErrorMsg
-    echomsg ":SyOrig doesn't yet support ". b:sy.type .'. Please open a Github issue.'
+    echomsg ":SyOrig doesn't support ". b:sy.type .' yet. Please open a Github issue.'
     echohl NONE
     return
   endif
 
-  let root     = split(system(s:orig_cmds[b:sy.type]))[0]
+  let type     = b:sy.type
+  let root     = split(system(s:orig_cmds[b:sy.type].rootcmd))[0]
   let prunelen = len(root) + 1
   let vcsfile  = expand('%:p')[prunelen :]
   let cwd      = getcwd()
@@ -113,7 +120,7 @@ function! sy#repo#orig_diff(bang)
     noautocmd leftabove vnew
     let s:orig_buffer = bufnr('%')
     setlocal buftype=nofile nobuflisted
-    execute 'silent read !git show HEAD:'. vcsfile
+    execute 'silent read !'. s:orig_cmds[type].origcmd . vcsfile
     silent 0delete_
     let &filetype = filetype
     diffthis
@@ -127,7 +134,7 @@ function! sy#repo#orig_diff(bang)
     noautocmd enew
     let s:orig_buffer = bufnr('%')
     setlocal buftype=nofile nobuflisted
-    execute 'silent read !git show HEAD:'. vcsfile
+    execute 'silent read !'. s:orig_cmds[type].origcmd . vcsfile
     silent 0delete_
     diffthis
     silent buffer #
