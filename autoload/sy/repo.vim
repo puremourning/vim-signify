@@ -104,9 +104,8 @@ function! sy#repo#orig_diff(bang)
 
   if has_key(s:orig_cmds[type], 'rootcmd')
     let root     = split(system(s:orig_cmds[b:sy.type].rootcmd))[0]
-    let prunelen = len(root) + 1
-    let vcsfile  = expand('%:p')[prunelen :]
     execute (haslocaldir() ? 'lcd' : 'cd') root
+    let vcsfile = expand('%:p:.')
   else
     let vcsfile = expand('%:p')
   endif
