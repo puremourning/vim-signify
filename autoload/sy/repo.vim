@@ -43,12 +43,14 @@ endif
 
 let s:orig_cmds = {
       \ 'git': {
-      \   'rootcmd': 'git rev-parse --show-toplevel',
-      \   'origcmd': 'git show HEAD:'
-      \  },
+      \   'origcmd': 'git show HEAD:',
+      \   'rootcmd': 'git rev-parse --show-toplevel'
+      \ },
       \ 'hg': {
-      \   'rootcmd': 'hg root',
       \   'origcmd': 'hg cat -- '
+      \ },
+      \ 'svn': {
+      \   'origcmd': 'svn cat -- '
       \ }}
 
 " Function: #detect {{{1
@@ -97,13 +99,17 @@ function! sy#repo#orig_diff(bang)
     return
   endif
 
-  let type     = b:sy.type
-  let root     = split(system(s:orig_cmds[b:sy.type].rootcmd))[0]
-  let prunelen = len(root) + 1
-  let vcsfile  = expand('%:p')[prunelen :]
-  let cwd      = getcwd()
+  let type = b:sy.type
+  let cwd  = getcwd()
 
-  execute (haslocaldir() ? 'lcd' : 'cd') root
+  if has_key(s:orig_cmds[type], 'rootcmd')
+    let root     = split(system(s:orig_cmds[b:sy.type].rootcmd))[0]
+    let prunelen = len(root) + 1
+    let vcsfile  = expand('%:p')[prunelen :]
+    execute (haslocaldir() ? 'lcd' : 'cd') root
+  else
+    let vcsfile = expand('%:p')
+  endif
 
   " Preserve some options changed by :diffthis / :diffoff.
   let s:pre = {
