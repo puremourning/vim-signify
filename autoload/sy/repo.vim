@@ -51,6 +51,9 @@ let s:orig_cmds = {
       \ },
       \ 'svn': {
       \   'origcmd': 'svn cat -- '
+      \ },
+      \ 'bzr': {
+      \   'origcmd': 'bzr cat -- '
       \ }}
 
 " Function: #detect {{{1
