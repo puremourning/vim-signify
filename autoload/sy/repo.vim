@@ -163,12 +163,10 @@ endfunction
 function! s:replace(cmd, pat, sub)
   let tmp = split(a:cmd, a:pat, 1)
   if len(tmp) > 1
-    let cmd = tmp[0] . a:sub . tmp[1]
+    return  tmp[0] . a:sub . tmp[1]
   else
-    let cmd = a:cmd
+    return a:cmd
   endif
-  echomsg 'DEBUG: '. string(tmp) .' === '. cmd
-  return cmd
 endfunction
 
 " Variables {{{1
